@@ -1,8 +1,0 @@
-Para o arquivo LUCASFRANCA_QUESTAO8.7z
-
-//
-// File Checksum Integrity Verifier version 2.05.
-//
-                MD5                             SHA-1
--------------------------------------------------------------------------
-80c7b09836d06dfa76caf143c4881776 fbbd4bb7d7942d36f9353b515c21ac6f46cc3020 lucasfranca_questao8.7z
