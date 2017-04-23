@@ -122,17 +122,17 @@ public class BibliotecariaTest {
 			when(_bdUsuario.EstaBloqueado(nomeUsuario)).thenReturn(false);
 			when(_bdUsuario.GetUsuario(nomeUsuario)).thenReturn(usuario);
 			
-			when(_bdLivros.EstaEmprestado(nomeLivro)).thenReturn(false);
+			when(_bdLivros.EstaDisponivel(nomeLivro)).thenReturn(true);
 			assertTrue(bibliotecaria.LivroDisponivel(nomeLivro));
 			assertFalse(usuario.VerificarSeLivroEstaEmprestado(nomeLivro));
 			
 			bibliotecaria.EmprestarLivro(nomeUsuario, nomeLivro);
-			when(_bdLivros.EstaEmprestado(nomeLivro)).thenReturn(true);
+			when(_bdLivros.EstaDisponivel(nomeLivro)).thenReturn(false);
 			assertFalse(bibliotecaria.LivroDisponivel(nomeLivro));
 			assertTrue(usuario.VerificarSeLivroEstaEmprestado(nomeLivro));
 			
 			bibliotecaria.DevolverLivro(nomeUsuario, nomeLivro);
-			when(_bdLivros.EstaEmprestado(nomeLivro)).thenReturn(false);
+			when(_bdLivros.EstaDisponivel(nomeLivro)).thenReturn(true);
 			assertTrue(bibliotecaria.LivroDisponivel(nomeLivro));
 			assertFalse(usuario.VerificarSeLivroEstaEmprestado(nomeLivro));
 		}
@@ -154,7 +154,7 @@ public class BibliotecariaTest {
 		{
 			when(_bdUsuario.GetUsuario(nomeUsuario)).thenReturn(usuario);
 			when(_bdUsuario.EstaBloqueado(nomeUsuario)).thenReturn(false);
-			when(_bdLivros.EstaEmprestado(nomeLivro)).thenReturn(true);
+			when(_bdLivros.EstaDisponivel(nomeLivro)).thenReturn(false);
 			bibliotecaria.EmprestarLivro(nomeUsuario, nomeLivro);
 			fail("Livro nao deveria estar disponivel");
 		}
@@ -168,7 +168,7 @@ public class BibliotecariaTest {
 			when(_bdUsuario.GetUsuario(nomeUsuario)).thenReturn(usuario);
 			usuario.SetBloqueado(true);
 			when(_bdUsuario.EstaBloqueado(nomeUsuario)).thenReturn(true);
-			when(_bdLivros.EstaEmprestado(nomeLivro)).thenReturn(false);
+			when(_bdLivros.EstaDisponivel(nomeLivro)).thenReturn(true);
 			bibliotecaria.EmprestarLivro(nomeUsuario, nomeLivro);
 			fail("Usuario deveria estar bloqueado");
 		}
@@ -183,7 +183,7 @@ public class BibliotecariaTest {
 			usuario.SetBloqueado(false);
 			when(_bdUsuario.EstaBloqueado(nomeUsuario)).thenReturn(false);
 			usuario.EmprestarLivro(nomeLivro);
-			when(_bdLivros.EstaEmprestado(nomeLivro)).thenReturn(false);
+			when(_bdLivros.EstaDisponivel(nomeLivro)).thenReturn(true);
 			bibliotecaria.EmprestarLivro(nomeUsuario, nomeLivro);
 			fail("Usuario ja deveria ter o livro");
 		}
@@ -195,7 +195,7 @@ public class BibliotecariaTest {
 		
 		try
 		{
-			when(_bdLivros.EstaEmprestado(nomeLivro)).thenReturn(false);
+			when(_bdLivros.EstaDisponivel(nomeLivro)).thenReturn(true);
 			when(_bdUsuario.GetUsuario(nomeUsuario)).thenReturn(usuario);
 			usuario.EmprestarLivro(nomeLivro);
 			bibliotecaria.DevolverLivro(nomeUsuario, nomeLivro);
@@ -209,7 +209,7 @@ public class BibliotecariaTest {
 		
 		try
 		{
-			when(_bdLivros.EstaEmprestado(nomeLivro)).thenReturn(true);
+			when(_bdLivros.EstaDisponivel(nomeLivro)).thenReturn(false);
 			when(_bdUsuario.GetUsuario(nomeUsuario)).thenReturn(usuario);
 			bibliotecaria.DevolverLivro(nomeUsuario, nomeLivro);
 			fail("Livro nao deveria estar com usuario");
@@ -217,6 +217,40 @@ public class BibliotecariaTest {
 		catch (Exception e)
 		{
 			assertEquals("Livro nao esta nas maos do usuario", e.getMessage());
+		}
+	}
+	
+	@Test
+	public void TestarEstadoLivro()
+	{
+		Bibliotecaria bibliotecaria = new Bibliotecaria(_bdUsuario, _bdLivros);
+		String nome = "O Pequeno Principe";
+		Livro livro = new Livro(nome);
+		
+		try
+		{
+			when(_bdLivros.GetLivro(nome)).thenReturn(livro);
+			
+			bibliotecaria.RegistrarLivroComoExtraviado(nome);
+			assertTrue(livro.GetExtraviado());
+			assertEquals("Extraviado", bibliotecaria.GetEstadoLivro(nome));
+			livro.SetEmprestado(true);
+			assertEquals("Extraviado", bibliotecaria.GetEstadoLivro(nome));
+			livro.SetEmprestado(false);
+			assertEquals("Extraviado", bibliotecaria.GetEstadoLivro(nome));
+			
+			bibliotecaria.RegistrarLivroComoNaoExtraviado(nome);
+			assertFalse(livro.GetExtraviado());
+			assertEquals("Disponivel", bibliotecaria.GetEstadoLivro(nome));
+
+			livro.SetEmprestado(true);
+			assertEquals("Emprestado", bibliotecaria.GetEstadoLivro(nome));
+			livro.SetEmprestado(false);
+			assertEquals("Disponivel", bibliotecaria.GetEstadoLivro(nome));
+		}
+		catch (Exception e)
+		{
+			fail(e.getMessage());
 		}
 	}
 

@@ -56,7 +56,8 @@ public class BDUsuarios {
 		String nome
 		) throws Exception
 	{
-		if (!ExisteUsuario(nome)) {
+		if (!ExisteUsuario(nome))
+		{
 			throw new Exception("Usuario inexistente");
 		}
 		return _usuarios.get(nome).GetBloqueado();

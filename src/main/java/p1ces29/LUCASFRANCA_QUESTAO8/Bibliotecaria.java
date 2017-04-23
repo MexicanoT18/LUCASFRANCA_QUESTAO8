@@ -86,7 +86,7 @@ public class Bibliotecaria {
 		String nome
 		) throws Exception
 	{
-		return !_bdLivros.EstaEmprestado(nome);
+		return _bdLivros.EstaDisponivel(nome);
 	}
 	
 	public void EmprestarLivro(
@@ -127,5 +127,48 @@ public class Bibliotecaria {
 		}
 		_bdLivros.DevolverLivro(nomeLivro);
 		usuario.RemoverLivro(nomeLivro);
+	}
+	
+	public void RegistrarLivroComoExtraviado(
+		String nome
+		) throws Exception
+	{
+		Livro livro = _bdLivros.GetLivro(nome);
+		if (livro.GetExtraviado())
+		{
+			throw new Exception("Livro ja estava extraviado");
+		}
+		livro.SetExtraviado(true);
+	}
+	
+	public void RegistrarLivroComoNaoExtraviado(
+		String nome
+		) throws Exception
+	{
+		Livro livro = _bdLivros.GetLivro(nome);
+		if (!livro.GetExtraviado())
+		{
+			throw new Exception("Livro nao estava extraviado");
+		}
+		livro.SetExtraviado(false);
+	}
+	
+	public String GetEstadoLivro(
+		String nome
+		) throws Exception
+	{
+		Livro livro = _bdLivros.GetLivro(nome);
+		if (livro.GetExtraviado())
+		{
+			return "Extraviado";
+		}
+		else if (livro.GetEmprestado())
+		{
+			return "Emprestado";
+		}
+		else
+		{
+			return "Disponivel";
+		}
 	}
 }

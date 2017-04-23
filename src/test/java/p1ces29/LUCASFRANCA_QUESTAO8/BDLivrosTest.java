@@ -14,9 +14,18 @@ public class BDLivrosTest {
 		try
 		{
 			assertFalse(bd.ExisteLivro(nome));
+			
 			bd.AdicionarLivro(nome);
 			assertTrue(bd.ExisteLivro(nome));
 			assertEquals(nome, bd.GetLivro(nome).GetNome());
+			assertTrue(bd.EstaDisponivel(nome));
+			
+			bd.GetLivro(nome).SetExtraviado(true);
+			assertFalse(bd.EstaDisponivel(nome));
+			
+			bd.GetLivro(nome).SetExtraviado(false);
+			assertTrue(bd.EstaDisponivel(nome));
+			
 			bd.RemoverLivro(nome);
 			assertFalse(bd.ExisteLivro(nome));
 		}
@@ -76,19 +85,25 @@ public class BDLivrosTest {
 		{
 			bd.AdicionarLivro(nome);
 			livro = bd.GetLivro(nome);
-			assertFalse(bd.EstaEmprestado(nome));
+			assertTrue(bd.EstaDisponivel(nome));
 			assertFalse(livro.GetEmprestado());
 			assertEquals(null, livro.GetNomeDono());
 			
 			bd.EmprestarLivro(nome, nomeDono);
-			assertTrue(bd.EstaEmprestado(nome));
+			assertFalse(bd.EstaDisponivel(nome));
 			assertTrue(livro.GetEmprestado());
 			assertEquals(nomeDono, livro.GetNomeDono());
 			
 			bd.DevolverLivro(nome);
-			assertFalse(bd.EstaEmprestado(nome));
+			assertTrue(bd.EstaDisponivel(nome));
 			assertFalse(livro.GetEmprestado());
 			assertEquals(null, livro.GetNomeDono());
+			
+			livro.SetExtraviado(true);
+			assertFalse(bd.EstaDisponivel(nome));
+			
+			livro.SetExtraviado(false);
+			assertTrue(bd.EstaDisponivel(nome));
 		}
 		catch (Exception e)
 		{

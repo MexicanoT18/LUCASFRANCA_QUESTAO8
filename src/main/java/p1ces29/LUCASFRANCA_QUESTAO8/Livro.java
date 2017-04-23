@@ -3,6 +3,7 @@ package p1ces29.LUCASFRANCA_QUESTAO8;
 public class Livro {
 	private String _nome;
 	private boolean _emprestado;
+	private boolean _extraviado;
 	private String _nomeDono;
 	
 	public Livro(
@@ -12,6 +13,7 @@ public class Livro {
 		_nome = nome;
 		_emprestado = false;
 		_nomeDono = null;
+		_extraviado = false;
 	}
 	
 	public String GetNome()
@@ -24,6 +26,11 @@ public class Livro {
 		return _emprestado;
 	}
 	
+	public boolean GetExtraviado()
+	{
+		return _extraviado;
+	}
+	
 	public String GetNomeDono()
 	{
 		return _nomeDono;
@@ -34,6 +41,13 @@ public class Livro {
 		)
 	{
 		_emprestado = emprestado;
+	}
+	
+	public void SetExtraviado(
+		boolean extraviado
+		)
+	{
+		_extraviado = extraviado;
 	}
 	
 	public void SetNomeDono(

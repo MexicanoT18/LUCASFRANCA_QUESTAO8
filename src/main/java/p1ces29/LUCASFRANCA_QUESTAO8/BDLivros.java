@@ -15,7 +15,8 @@ public class BDLivros {
 		String nome
 		) throws Exception
 	{
-		if (ExisteLivro(nome)) {
+		if (ExisteLivro(nome))
+		{
 			throw new Exception("Livro ja cadastrado");
 		}
 		Livro livro = new Livro(nome);
@@ -26,7 +27,8 @@ public class BDLivros {
 		String nome
 		) throws Exception
 	{
-		if (!ExisteLivro(nome)) {
+		if (!ExisteLivro(nome))
+		{
 			throw new Exception("Livro inexistente");
 		}
 		return _livros.get(nome);
@@ -36,7 +38,8 @@ public class BDLivros {
 		String nome
 		) throws Exception
 	{
-		if (!ExisteLivro(nome)) {
+		if (!ExisteLivro(nome))
+		{
 			throw new Exception("Livro inexistente");
 		}
 		_livros.remove(nome);
@@ -49,14 +52,15 @@ public class BDLivros {
 		return _livros.containsKey(nome);
 	}
 	
-	public boolean EstaEmprestado(
+	public boolean EstaDisponivel(
 		String nome
 		) throws Exception
 	{
-		if (!ExisteLivro(nome)) {
+		if (!ExisteLivro(nome))
+		{
 			throw new Exception("Livro inexistente");
 		}
-		return _livros.get(nome).GetEmprestado();
+		return !_livros.get(nome).GetEmprestado() && !_livros.get(nome).GetExtraviado();
 	}
 	
 	public void EmprestarLivro(
@@ -64,7 +68,7 @@ public class BDLivros {
 		String nomeDono
 		) throws Exception
 	{
-		if (EstaEmprestado(nome))
+		if (!EstaDisponivel(nome))
 		{
 			throw new Exception("Livro ja emprestado");
 		}
@@ -77,7 +81,7 @@ public class BDLivros {
 		String nome
 		) throws Exception
 	{
-		if (!EstaEmprestado(nome))
+		if (EstaDisponivel(nome))
 		{
 			throw new Exception("Livro nao emprestado");
 		}
