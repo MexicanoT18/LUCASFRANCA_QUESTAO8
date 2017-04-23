@@ -1,7 +1,10 @@
 package p1ces29.LUCASFRANCA_QUESTAO8;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 public class Bibliotecaria {
 
@@ -39,35 +42,44 @@ public class Bibliotecaria {
 		_bdUsuarios.RemoverUsuario(nome);
 	}
 	
-	public void BloquearUsuario(
+	public void BloquearUsuarioCobranca(
 		String nome,
 		String dataBloqueio
 		) throws Exception
 	{
-		_bdUsuarios.BloquearUsuario(nome, dataBloqueio);
+		_bdUsuarios.BloquearUsuarioCobranca(nome);
 	}
 	
-	public boolean PodeSerDesbloqueado(
+	public boolean EstaBloqueadoPorCobranca(
+		String nome
+		) throws Exception
+	{
+		return _bdUsuarios.GetUsuario(nome).GetBloqueadoCobranca();
+	}
+	
+	public boolean EstaBloqueadoPorTempo(
 		String nome,
 		String dataAtual
 		) throws Exception
 	{
-		Usuario usuario = _bdUsuarios.GetUsuario(nome);
-		if (!usuario.GetBloqueado() || usuario.GetDataBloqueio() == null)
+		Set<String> livrosEmprestados = _bdUsuarios.GetUsuario(nome).GetLivrosEmprestados();
+		
+		for(String nomeLivro : livrosEmprestados)
 		{
-			return true;
+			if (_bdLivros.GetLivro(nomeLivro).GetVencido(dataAtual))
+			{
+				return true;
+			}
 		}
-		SimpleDateFormat format = new SimpleDateFormat("dd/MM/yy");
-		Date bloqueio = format.parse(usuario.GetDataBloqueio());
-		Date atual = format.parse(dataAtual);
-		return bloqueio.before(atual);
+		return false;
 	}
 	
 	public boolean VerificarUsuarioBloqueado(
-		String nome
+		String nome,
+		String dataAtual
 		) throws Exception
 	{
-		return _bdUsuarios.EstaBloqueado(nome);
+		return _bdUsuarios.EstaBloqueado(nome) || EstaBloqueadoPorTempo(nome, dataAtual);
 	}
 	
 	public void DesbloquearUsuario(
@@ -75,7 +87,7 @@ public class Bibliotecaria {
 		String dataAtual
 		) throws Exception
 	{
-		if (!PodeSerDesbloqueado(nome, dataAtual))
+		if (EstaBloqueadoPorTempo(nome, dataAtual))
 		{
 			throw new Exception("Usuario nao pode ser desbloqueado");
 		}
@@ -91,24 +103,26 @@ public class Bibliotecaria {
 	
 	public void EmprestarLivro(
 		String nomeUsuario,
-		String nomeLivro
+		String nomeLivro,
+		String dataLimite,
+		String dataAtual
 		) throws Exception
 	{
-		if (!LivroDisponivel(nomeLivro))
-		{
-			throw new Exception("Livro ja emprestado");
-		}
-		if (VerificarUsuarioBloqueado(nomeUsuario))
-		{
-			throw new Exception("Usuario bloqueado");
-		}
 		Usuario usuario = _bdUsuarios.GetUsuario(nomeUsuario);
 		if (usuario.VerificarSeLivroEstaEmprestado(nomeLivro))
 		{
 			throw new Exception("Livro ja nas maos do usuario");
 		}
+		if (!LivroDisponivel(nomeLivro))
+		{
+			throw new Exception("Livro ja emprestado");
+		}
+		if (VerificarUsuarioBloqueado(nomeUsuario, dataAtual))
+		{
+			throw new Exception("Usuario bloqueado");
+		}
 		usuario.EmprestarLivro(nomeLivro);
-		_bdLivros.EmprestarLivro(nomeLivro, nomeUsuario);
+		_bdLivros.EmprestarLivro(nomeLivro, nomeUsuario, dataLimite);
 	}
 	
 	public void DevolverLivro(
@@ -170,5 +184,41 @@ public class Bibliotecaria {
 		{
 			return "Disponivel";
 		}
+	}
+	
+	public String GetEstadoUsuario(
+		String nome,
+		String dataAtual
+		) throws Exception
+	{
+		if (EstaBloqueadoPorCobranca(nome))
+		{
+			return "Bloqueado por cobranca";
+		}
+		else if (EstaBloqueadoPorTempo(nome, dataAtual))
+		{
+			return "Bloqueado por tempo";
+		}
+		else
+		{
+			return "Desbloqueado";
+		}
+	}
+	
+	public List<Livro> GetListaLivros(
+		String nome
+		) throws Exception
+	{
+		Set<String> livrosEmprestados = _bdUsuarios.GetUsuario(nome).GetLivrosEmprestados();
+		List<Livro> livros = new ArrayList<Livro>();
+		Livro livro;
+		
+		for(String nomeLivro : livrosEmprestados)
+		{
+			livro = _bdLivros.GetLivro(nomeLivro).Clonar();
+			livros.add(livro);
+		}
+		
+		return livros;
 	}
 }

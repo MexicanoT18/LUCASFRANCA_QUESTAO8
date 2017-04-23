@@ -1,10 +1,15 @@
 package p1ces29.LUCASFRANCA_QUESTAO8;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class Livro {
 	private String _nome;
 	private boolean _emprestado;
 	private boolean _extraviado;
 	private String _nomeDono;
+	private String _dataLimite;
+	private static final SimpleDateFormat _format = new SimpleDateFormat("dd/MM/yy");
 	
 	public Livro(
 		String nome
@@ -14,6 +19,7 @@ public class Livro {
 		_emprestado = false;
 		_nomeDono = null;
 		_extraviado = false;
+		_dataLimite = null;
 	}
 	
 	public String GetNome()
@@ -36,6 +42,22 @@ public class Livro {
 		return _nomeDono;
 	}
 	
+	public void SetDataLimite(
+		String dataLimite
+		)
+	{
+		_dataLimite = dataLimite;
+	}
+	
+	public boolean GetVencido(
+		String dataAtual
+		) throws Exception
+	{
+		Date limite = _format.parse(_dataLimite);
+		Date atual = _format.parse(dataAtual);
+		return limite.before(atual);
+	}
+	
 	public void SetEmprestado(
 		boolean emprestado
 		)
@@ -55,5 +77,15 @@ public class Livro {
 		)
 	{
 		_nomeDono = nomeDono;
+	}
+	
+	public Livro Clonar()
+	{
+		Livro livro = new Livro(_nome);
+		livro.SetDataLimite(_dataLimite);
+		livro.SetEmprestado(_emprestado);
+		livro.SetExtraviado(_extraviado);
+		livro.SetNomeDono(_nomeDono);
+		return livro;
 	}
 }

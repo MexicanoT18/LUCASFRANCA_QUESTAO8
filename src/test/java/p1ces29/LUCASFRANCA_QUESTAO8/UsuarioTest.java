@@ -11,16 +11,12 @@ public class UsuarioTest {
 	{
 		Usuario usuario = new Usuario("Lucas");
 		assertEquals("Lucas", usuario.GetNome());
-		assertFalse(usuario.GetBloqueado());
-		assertEquals(null, usuario.GetDataBloqueio());
+		assertFalse(usuario.GetBloqueadoCobranca());
 
-		usuario.SetBloqueado(true);
-		assertTrue(usuario.GetBloqueado());
-		usuario.SetBloqueado(false);
-		assertFalse(usuario.GetBloqueado());
-		
-		usuario.SetDataBloqueio("24/04/2017");
-		assertEquals("24/04/2017", usuario.GetDataBloqueio());
+		usuario.SetBloqueadoCobranca(true);
+		assertTrue(usuario.GetBloqueadoCobranca());
+		usuario.SetBloqueadoCobranca(false);
+		assertFalse(usuario.GetBloqueadoCobranca());
 	}
 
 	@Test

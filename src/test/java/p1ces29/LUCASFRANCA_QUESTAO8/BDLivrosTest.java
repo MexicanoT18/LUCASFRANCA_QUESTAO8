@@ -79,6 +79,7 @@ public class BDLivrosTest {
 		BDLivros bd = new BDLivros();
 		String nome = "O Pequeno Principe";
 		String nomeDono = "Lucas Franca";
+		String dataLimite = "25/04/2017";
 		Livro livro;
 		
 		try
@@ -89,7 +90,7 @@ public class BDLivrosTest {
 			assertFalse(livro.GetEmprestado());
 			assertEquals(null, livro.GetNomeDono());
 			
-			bd.EmprestarLivro(nome, nomeDono);
+			bd.EmprestarLivro(nome, nomeDono, dataLimite);
 			assertFalse(bd.EstaDisponivel(nome));
 			assertTrue(livro.GetEmprestado());
 			assertEquals(nomeDono, livro.GetNomeDono());

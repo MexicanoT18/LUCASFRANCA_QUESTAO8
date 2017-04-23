@@ -68,7 +68,6 @@ public class BDUsuariosTest {
 	public void TestarBloqueioUsuariosSucesso() {
 		BDUsuarios bd = new BDUsuarios();
 		String nome = "Lucas Franca";
-		String data = "22/04/2017";
 		Usuario usuario;
 
 		try
@@ -76,14 +75,12 @@ public class BDUsuariosTest {
 			bd.CadastrarUsuario("Lucas Franca");
 			usuario = bd.GetUsuario(nome);
 			
-			bd.BloquearUsuario(nome, data);
-			assertTrue(usuario.GetBloqueado());
-			assertEquals(data, usuario.GetDataBloqueio());
+			bd.BloquearUsuarioCobranca(nome);
+			assertTrue(usuario.GetBloqueadoCobranca());
 			
 			bd.DesbloquearUsuario(nome);
 			usuario = bd.GetUsuario(nome);
-			assertFalse(usuario.GetBloqueado());
-			assertEquals(null, usuario.GetDataBloqueio());
+			assertFalse(usuario.GetBloqueadoCobranca());
 		}
 		catch (Exception e)
 		{

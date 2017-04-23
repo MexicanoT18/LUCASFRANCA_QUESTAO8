@@ -19,8 +19,7 @@ public class BDLivros {
 		{
 			throw new Exception("Livro ja cadastrado");
 		}
-		Livro livro = new Livro(nome);
-		_livros.put(nome, livro);
+		_livros.put(nome, new Livro(nome));
 	}
 
 	public Livro GetLivro(
@@ -65,7 +64,8 @@ public class BDLivros {
 	
 	public void EmprestarLivro(
 		String nome,
-		String nomeDono
+		String nomeDono,
+		String dataLimite
 		) throws Exception
 	{
 		if (!EstaDisponivel(nome))
@@ -75,6 +75,7 @@ public class BDLivros {
 		Livro livro = _livros.get(nome);
 		livro.SetEmprestado(true);
 		livro.SetNomeDono(nomeDono);
+		livro.SetDataLimite(dataLimite);
 	}
 	
 	public void DevolverLivro(

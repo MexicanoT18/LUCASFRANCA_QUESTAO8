@@ -9,6 +9,9 @@ import org.mockito.Mockito;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Set;
+import java.util.TreeSet;
+
 
 public class BibliotecariaTest {
 
@@ -71,7 +74,7 @@ public class BibliotecariaTest {
 	}
 
 	@Test
-	public void TestarBloquearDesbloquearUsuarioSucesso()
+	public void TestarBloquearDesbloquearCobrancaUsuarioSucesso()
 	{
 		Bibliotecaria bibliotecaria = new Bibliotecaria(_bdUsuario, _bdLivros);
 		String nome = "Lucas Franca";
@@ -83,24 +86,27 @@ public class BibliotecariaTest {
 		
 		try
 		{
+			when(_bdUsuario.GetUsuario(nome)).thenReturn(usuario);
+			when(usuario.GetLivrosEmprestados()).thenReturn(new TreeSet<String>());
 			when(_bdUsuario.ExisteUsuario(nome)).thenReturn(false);
-			when(usuario.GetBloqueado()).thenReturn(false);
-			when(usuario.GetDataBloqueio()).thenReturn(dataBloqueio);
+			when(usuario.GetBloqueadoCobranca()).thenReturn(false);
 			
 			bibliotecaria.RegistrarUsuario(nome);
 			when(_bdUsuario.GetUsuario(nome)).thenReturn(usuario);
 			when(_bdUsuario.ExisteUsuario(nome)).thenReturn(true);
 			
-			bibliotecaria.BloquearUsuario(nome, dataBloqueio);
-			when(usuario.GetBloqueado()).thenReturn(true);
-			when(usuario.GetDataBloqueio()).thenReturn(dataBloqueio);
+			bibliotecaria.BloquearUsuarioCobranca(nome, dataBloqueio);
+			when(usuario.GetBloqueadoCobranca()).thenReturn(true);
+			assertTrue(bibliotecaria.EstaBloqueadoPorCobranca(nome));
+			assertEquals("Bloqueado por cobranca", bibliotecaria.GetEstadoUsuario(nome, dataBloqueio));
 			
-			assertFalse(bibliotecaria.PodeSerDesbloqueado(nome, dataAntes));
-			assertTrue(bibliotecaria.PodeSerDesbloqueado(nome, dataDepois));
+			assertFalse(bibliotecaria.EstaBloqueadoPorTempo(nome, dataAntes));
+			assertFalse(bibliotecaria.EstaBloqueadoPorTempo(nome, dataDepois));
 			
 			bibliotecaria.DesbloquearUsuario(nome, dataDepois);
-			when(usuario.GetBloqueado()).thenReturn(false);
-			when(usuario.GetDataBloqueio()).thenReturn(null);
+			when(usuario.GetBloqueadoCobranca()).thenReturn(false);
+			assertFalse(bibliotecaria.EstaBloqueadoPorCobranca(nome));
+			assertEquals("Desbloqueado", bibliotecaria.GetEstadoUsuario(nome, dataBloqueio));
 		}
 		catch (Exception e)
 		{
@@ -114,6 +120,8 @@ public class BibliotecariaTest {
 		Bibliotecaria bibliotecaria = new Bibliotecaria(_bdUsuario, _bdLivros);
 		String nomeUsuario = "Lucas Franca";
 		String nomeLivro = "O Pequeno Principe";
+		String dataLimite = "25/04/2017";
+		String dataAtual = "22/04/2017";
 		Usuario usuario = new Usuario(nomeUsuario);
 		
 		try
@@ -126,7 +134,7 @@ public class BibliotecariaTest {
 			assertTrue(bibliotecaria.LivroDisponivel(nomeLivro));
 			assertFalse(usuario.VerificarSeLivroEstaEmprestado(nomeLivro));
 			
-			bibliotecaria.EmprestarLivro(nomeUsuario, nomeLivro);
+			bibliotecaria.EmprestarLivro(nomeUsuario, nomeLivro, dataLimite, dataAtual);
 			when(_bdLivros.EstaDisponivel(nomeLivro)).thenReturn(false);
 			assertFalse(bibliotecaria.LivroDisponivel(nomeLivro));
 			assertTrue(usuario.VerificarSeLivroEstaEmprestado(nomeLivro));
@@ -148,6 +156,8 @@ public class BibliotecariaTest {
 		Bibliotecaria bibliotecaria = new Bibliotecaria(_bdUsuario, _bdLivros);
 		String nomeUsuario = "Lucas Franca";
 		String nomeLivro = "O Pequeno Principe";
+		String dataLimite = "25/04/2017";
+		String dataAtual = "22/04/2017";
 		Usuario usuario = new Usuario(nomeUsuario);
 		
 		try
@@ -155,7 +165,7 @@ public class BibliotecariaTest {
 			when(_bdUsuario.GetUsuario(nomeUsuario)).thenReturn(usuario);
 			when(_bdUsuario.EstaBloqueado(nomeUsuario)).thenReturn(false);
 			when(_bdLivros.EstaDisponivel(nomeLivro)).thenReturn(false);
-			bibliotecaria.EmprestarLivro(nomeUsuario, nomeLivro);
+			bibliotecaria.EmprestarLivro(nomeUsuario, nomeLivro, dataLimite, dataAtual);
 			fail("Livro nao deveria estar disponivel");
 		}
 		catch (Exception e)
@@ -166,10 +176,10 @@ public class BibliotecariaTest {
 		try
 		{
 			when(_bdUsuario.GetUsuario(nomeUsuario)).thenReturn(usuario);
-			usuario.SetBloqueado(true);
+			usuario.SetBloqueadoCobranca(true);
 			when(_bdUsuario.EstaBloqueado(nomeUsuario)).thenReturn(true);
 			when(_bdLivros.EstaDisponivel(nomeLivro)).thenReturn(true);
-			bibliotecaria.EmprestarLivro(nomeUsuario, nomeLivro);
+			bibliotecaria.EmprestarLivro(nomeUsuario, nomeLivro, dataLimite, dataAtual);
 			fail("Usuario deveria estar bloqueado");
 		}
 		catch (Exception e)
@@ -180,11 +190,11 @@ public class BibliotecariaTest {
 		try
 		{
 			when(_bdUsuario.GetUsuario(nomeUsuario)).thenReturn(usuario);
-			usuario.SetBloqueado(false);
+			usuario.SetBloqueadoCobranca(false);
 			when(_bdUsuario.EstaBloqueado(nomeUsuario)).thenReturn(false);
 			usuario.EmprestarLivro(nomeLivro);
 			when(_bdLivros.EstaDisponivel(nomeLivro)).thenReturn(true);
-			bibliotecaria.EmprestarLivro(nomeUsuario, nomeLivro);
+			bibliotecaria.EmprestarLivro(nomeUsuario, nomeLivro, dataLimite, dataAtual);
 			fail("Usuario ja deveria ter o livro");
 		}
 		catch (Exception e)
@@ -247,6 +257,42 @@ public class BibliotecariaTest {
 			assertEquals("Emprestado", bibliotecaria.GetEstadoLivro(nome));
 			livro.SetEmprestado(false);
 			assertEquals("Disponivel", bibliotecaria.GetEstadoLivro(nome));
+		}
+		catch (Exception e)
+		{
+			fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void TestarBloqueioPorTempo()
+	{
+		String nomeLivro = "O Pequeno Principe";
+		String nomeUsuario = "Lucas Franca";
+		String dataBloqueio = "22/04/2017";
+		
+		Set<String> livrosEmprestados = new TreeSet<String>();
+		livrosEmprestados.add(nomeLivro);
+		Usuario usuario = mock(Usuario.class);
+		when(usuario.GetLivrosEmprestados()).thenReturn(livrosEmprestados);
+		when(usuario.GetNome()).thenReturn(nomeUsuario);
+		when(usuario.GetBloqueadoCobranca()).thenReturn(false);
+		
+		try
+		{
+			Livro livro = mock(Livro.class);
+			when(_bdUsuario.GetUsuario(nomeUsuario)).thenReturn(usuario);
+			when(_bdLivros.GetLivro(nomeLivro)).thenReturn(livro);
+			when(livro.GetNome()).thenReturn(nomeLivro);
+
+			Bibliotecaria bibliotecaria = new Bibliotecaria(_bdUsuario, _bdLivros);
+			when(livro.GetVencido(dataBloqueio)).thenReturn(true);
+			assertTrue(bibliotecaria.EstaBloqueadoPorTempo(nomeUsuario, dataBloqueio));
+			assertEquals("Bloqueado por tempo", bibliotecaria.GetEstadoUsuario(nomeUsuario, dataBloqueio));
+			
+			when(livro.GetVencido(dataBloqueio)).thenReturn(false);
+			assertFalse(bibliotecaria.EstaBloqueadoPorTempo(nomeUsuario, dataBloqueio));
+			assertEquals("Desbloqueado", bibliotecaria.GetEstadoUsuario(nomeUsuario, dataBloqueio));
 		}
 		catch (Exception e)
 		{

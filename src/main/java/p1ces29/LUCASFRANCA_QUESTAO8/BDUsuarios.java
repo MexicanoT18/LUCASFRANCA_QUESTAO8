@@ -60,25 +60,20 @@ public class BDUsuarios {
 		{
 			throw new Exception("Usuario inexistente");
 		}
-		return _usuarios.get(nome).GetBloqueado();
+		return _usuarios.get(nome).GetBloqueadoCobranca();
 	}
 	
-	public void BloquearUsuario(
-		String nome,
-		String dataBloqueio
+	public void BloquearUsuarioCobranca(
+		String nome
 		) throws Exception
 	{
-		Usuario usuario = GetUsuario(nome);
-		usuario.SetBloqueado(true);
-		usuario.SetDataBloqueio(dataBloqueio);
+		GetUsuario(nome).SetBloqueadoCobranca(true);
 	}
 	
 	public void DesbloquearUsuario(
 		String nome
 		) throws Exception
 	{
-		Usuario usuario = GetUsuario(nome);
-		usuario.SetBloqueado(false);
-		usuario.SetDataBloqueio(null);
+		GetUsuario(nome).SetBloqueadoCobranca(false);
 	}
 }
