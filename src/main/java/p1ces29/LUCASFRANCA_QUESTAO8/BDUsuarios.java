@@ -11,24 +11,23 @@ public class BDUsuarios {
 		_usuarios = new TreeMap<String, Usuario>();
 	}
 	
-	public Usuario Cadastrar(
+	public void CadastrarUsuario(
 		String nome
 		) throws Exception
 	{
-		if (_usuarios.containsKey(nome))
+		if (ExisteUsuario(nome))
 		{
 			throw new Exception("Usuario ja cadastrado");
 		}
 		Usuario usuario = new Usuario(nome);
 		_usuarios.put(nome, usuario);
-		return usuario;
 	}
 	
 	public Usuario GetUsuario(
 		String nome
 		) throws Exception
 	{
-		if (!_usuarios.containsKey(nome))
+		if (!ExisteUsuario(nome))
 		{
 			throw new Exception("Usuario inexistente");
 		}
@@ -39,7 +38,7 @@ public class BDUsuarios {
 		String nome
 		) throws Exception
 	{
-		if (!_usuarios.containsKey(nome))
+		if (!ExisteUsuario(nome))
 		{
 			throw new Exception("Usuario inexistente");
 		}
@@ -51,6 +50,16 @@ public class BDUsuarios {
 		) throws Exception
 	{
 		return _usuarios.containsKey(nome);
+	}
+	
+	public boolean EstaBloqueado(
+		String nome
+		) throws Exception
+	{
+		if (!ExisteUsuario(nome)) {
+			throw new Exception("Usuario inexistente");
+		}
+		return _usuarios.get(nome).GetBloqueado();
 	}
 	
 	public void BloquearUsuario(

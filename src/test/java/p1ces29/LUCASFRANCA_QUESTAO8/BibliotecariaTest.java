@@ -11,22 +11,25 @@ import static org.mockito.Mockito.when;
 
 
 public class BibliotecariaTest {
-	
+
 	BDUsuarios _bdUsuario;
+	BDLivros _bdLivros;
 	
 	@Before
 	public void MockarBD()
 	{
 		_bdUsuario = mock(BDUsuarios.class);
+		_bdLivros = mock(BDLivros.class);
 	}
 
 	@Test
 	public void TestarRegistrarRemoverUsuarioSucesso()
 	{
-		Bibliotecaria bibliotecaria = new Bibliotecaria(_bdUsuario);
+		Bibliotecaria bibliotecaria = new Bibliotecaria(_bdUsuario, _bdLivros);
 		String nome = "Lucas Franca";
 		
-		try{
+		try
+		{
 			when(_bdUsuario.ExisteUsuario(nome)).thenReturn(false);
 			bibliotecaria.RegistrarUsuario(nome);
 			when(_bdUsuario.ExisteUsuario(nome)).thenReturn(true);
@@ -41,11 +44,12 @@ public class BibliotecariaTest {
 	@Test
 	public void TestarRegistrarRemoverUsuarioFracasso()
 	{
-		Bibliotecaria bibliotecaria = new Bibliotecaria(_bdUsuario);
+		Bibliotecaria bibliotecaria = new Bibliotecaria(_bdUsuario, _bdLivros);
 		String nome = "Lucas Franca";
 		
-		try{
-			when(_bdUsuario.Cadastrar(nome)).thenThrow(new Exception("Usuario ja cadastrado"));
+		try
+		{
+			Mockito.doThrow(new Exception("Usuario ja cadastrado")).when(_bdUsuario).CadastrarUsuario(nome);
 			bibliotecaria.RegistrarUsuario(nome);
 			fail("Usuario nao deveria ser cadastrado duas vezes");
 		}
@@ -54,7 +58,8 @@ public class BibliotecariaTest {
 			assertEquals("Usuario ja cadastrado", e.getMessage());
 		}
 		
-		try{
+		try
+		{
 			Mockito.doThrow(new Exception("Usuario inexistente")).when(_bdUsuario).RemoverUsuario(nome);
 			bibliotecaria.RemoverUsuario(nome);
 			fail("Usuario nao deveria ser removido duas vezes");
@@ -68,7 +73,7 @@ public class BibliotecariaTest {
 	@Test
 	public void TestarBloquearDesbloquearUsuarioSucesso()
 	{
-		Bibliotecaria bibliotecaria = new Bibliotecaria(_bdUsuario);
+		Bibliotecaria bibliotecaria = new Bibliotecaria(_bdUsuario, _bdLivros);
 		String nome = "Lucas Franca";
 		Usuario usuario = mock(Usuario.class);
 		when(usuario.GetNome()).thenReturn(nome);
@@ -76,7 +81,8 @@ public class BibliotecariaTest {
 		String dataAntes = "21/04/2017";
 		String dataDepois = "23/04/2017";
 		
-		try{
+		try
+		{
 			when(_bdUsuario.ExisteUsuario(nome)).thenReturn(false);
 			when(usuario.GetBloqueado()).thenReturn(false);
 			when(usuario.GetDataBloqueio()).thenReturn(dataBloqueio);
@@ -99,6 +105,118 @@ public class BibliotecariaTest {
 		catch (Exception e)
 		{
 			fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void TestarEmprestimoLivroSucesso()
+	{
+		Bibliotecaria bibliotecaria = new Bibliotecaria(_bdUsuario, _bdLivros);
+		String nomeUsuario = "Lucas Franca";
+		String nomeLivro = "O Pequeno Principe";
+		Usuario usuario = new Usuario(nomeUsuario);
+		
+		try
+		{
+			bibliotecaria.RegistrarUsuario(nomeUsuario);
+			when(_bdUsuario.EstaBloqueado(nomeUsuario)).thenReturn(false);
+			when(_bdUsuario.GetUsuario(nomeUsuario)).thenReturn(usuario);
+			
+			when(_bdLivros.EstaEmprestado(nomeLivro)).thenReturn(false);
+			assertTrue(bibliotecaria.LivroDisponivel(nomeLivro));
+			assertFalse(usuario.VerificarSeLivroEstaEmprestado(nomeLivro));
+			
+			bibliotecaria.EmprestarLivro(nomeUsuario, nomeLivro);
+			when(_bdLivros.EstaEmprestado(nomeLivro)).thenReturn(true);
+			assertFalse(bibliotecaria.LivroDisponivel(nomeLivro));
+			assertTrue(usuario.VerificarSeLivroEstaEmprestado(nomeLivro));
+			
+			bibliotecaria.DevolverLivro(nomeUsuario, nomeLivro);
+			when(_bdLivros.EstaEmprestado(nomeLivro)).thenReturn(false);
+			assertTrue(bibliotecaria.LivroDisponivel(nomeLivro));
+			assertFalse(usuario.VerificarSeLivroEstaEmprestado(nomeLivro));
+		}
+		catch (Exception e)
+		{
+			fail(e.getMessage());
+		}
+	}
+	
+	@Test
+	public void TestarEmprestimoLivroFracasso()
+	{
+		Bibliotecaria bibliotecaria = new Bibliotecaria(_bdUsuario, _bdLivros);
+		String nomeUsuario = "Lucas Franca";
+		String nomeLivro = "O Pequeno Principe";
+		Usuario usuario = new Usuario(nomeUsuario);
+		
+		try
+		{
+			when(_bdUsuario.GetUsuario(nomeUsuario)).thenReturn(usuario);
+			when(_bdUsuario.EstaBloqueado(nomeUsuario)).thenReturn(false);
+			when(_bdLivros.EstaEmprestado(nomeLivro)).thenReturn(true);
+			bibliotecaria.EmprestarLivro(nomeUsuario, nomeLivro);
+			fail("Livro nao deveria estar disponivel");
+		}
+		catch (Exception e)
+		{
+			assertEquals("Livro ja emprestado", e.getMessage());
+		}
+		
+		try
+		{
+			when(_bdUsuario.GetUsuario(nomeUsuario)).thenReturn(usuario);
+			usuario.SetBloqueado(true);
+			when(_bdUsuario.EstaBloqueado(nomeUsuario)).thenReturn(true);
+			when(_bdLivros.EstaEmprestado(nomeLivro)).thenReturn(false);
+			bibliotecaria.EmprestarLivro(nomeUsuario, nomeLivro);
+			fail("Usuario deveria estar bloqueado");
+		}
+		catch (Exception e)
+		{
+			assertEquals("Usuario bloqueado", e.getMessage());
+		}
+		
+		try
+		{
+			when(_bdUsuario.GetUsuario(nomeUsuario)).thenReturn(usuario);
+			usuario.SetBloqueado(false);
+			when(_bdUsuario.EstaBloqueado(nomeUsuario)).thenReturn(false);
+			usuario.EmprestarLivro(nomeLivro);
+			when(_bdLivros.EstaEmprestado(nomeLivro)).thenReturn(false);
+			bibliotecaria.EmprestarLivro(nomeUsuario, nomeLivro);
+			fail("Usuario ja deveria ter o livro");
+		}
+		catch (Exception e)
+		{
+			assertEquals("Livro ja nas maos do usuario", e.getMessage());
+			usuario.RemoverLivro(nomeLivro);
+		}
+		
+		try
+		{
+			when(_bdLivros.EstaEmprestado(nomeLivro)).thenReturn(false);
+			when(_bdUsuario.GetUsuario(nomeUsuario)).thenReturn(usuario);
+			usuario.EmprestarLivro(nomeLivro);
+			bibliotecaria.DevolverLivro(nomeUsuario, nomeLivro);
+			fail("Livro deveria ja estar na biblioteca");
+		}
+		catch (Exception e)
+		{
+			assertEquals("Livro ja esta na biblioteca", e.getMessage());
+			usuario.RemoverLivro(nomeLivro);
+		}
+		
+		try
+		{
+			when(_bdLivros.EstaEmprestado(nomeLivro)).thenReturn(true);
+			when(_bdUsuario.GetUsuario(nomeUsuario)).thenReturn(usuario);
+			bibliotecaria.DevolverLivro(nomeUsuario, nomeLivro);
+			fail("Livro nao deveria estar com usuario");
+		}
+		catch (Exception e)
+		{
+			assertEquals("Livro nao esta nas maos do usuario", e.getMessage());
 		}
 	}
 

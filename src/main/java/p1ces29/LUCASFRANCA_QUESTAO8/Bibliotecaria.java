@@ -6,19 +6,30 @@ import java.util.Date;
 public class Bibliotecaria {
 
 	private BDUsuarios _bdUsuarios;
+	private BDLivros _bdLivros;
 	
 	public Bibliotecaria(
-		BDUsuarios bdUsuarios
-		)
+		BDUsuarios bdUsuarios,
+		BDLivros bdLivros
+		) throws NullPointerException
 	{
+		if (bdUsuarios == null)
+		{
+			throw new NullPointerException("Banco de dados de usuarios null");
+		}
+		if (bdLivros == null)
+		{
+			throw new NullPointerException("Banco de dados de livros null");
+		}
 		_bdUsuarios = bdUsuarios;
+		_bdLivros = bdLivros;
 	}
 	
 	public void RegistrarUsuario(
 		String nome
 		) throws Exception
 	{
-		_bdUsuarios.Cadastrar(nome);
+		_bdUsuarios.CadastrarUsuario(nome);
 	}
 	
 	public void RemoverUsuario(
@@ -52,6 +63,13 @@ public class Bibliotecaria {
 		return bloqueio.before(atual);
 	}
 	
+	public boolean VerificarUsuarioBloqueado(
+		String nome
+		) throws Exception
+	{
+		return _bdUsuarios.EstaBloqueado(nome);
+	}
+	
 	public void DesbloquearUsuario(
 		String nome,
 		String dataAtual
@@ -62,5 +80,52 @@ public class Bibliotecaria {
 			throw new Exception("Usuario nao pode ser desbloqueado");
 		}
 		_bdUsuarios.DesbloquearUsuario(nome);
+	}
+	
+	public boolean LivroDisponivel(
+		String nome
+		) throws Exception
+	{
+		return !_bdLivros.EstaEmprestado(nome);
+	}
+	
+	public void EmprestarLivro(
+		String nomeUsuario,
+		String nomeLivro
+		) throws Exception
+	{
+		if (!LivroDisponivel(nomeLivro))
+		{
+			throw new Exception("Livro ja emprestado");
+		}
+		if (VerificarUsuarioBloqueado(nomeUsuario))
+		{
+			throw new Exception("Usuario bloqueado");
+		}
+		Usuario usuario = _bdUsuarios.GetUsuario(nomeUsuario);
+		if (usuario.VerificarSeLivroEstaEmprestado(nomeLivro))
+		{
+			throw new Exception("Livro ja nas maos do usuario");
+		}
+		usuario.EmprestarLivro(nomeLivro);
+		_bdLivros.EmprestarLivro(nomeLivro, nomeUsuario);
+	}
+	
+	public void DevolverLivro(
+		String nomeUsuario,
+		String nomeLivro
+		) throws Exception
+	{
+		if (LivroDisponivel(nomeLivro))
+		{
+			throw new Exception("Livro ja esta na biblioteca");
+		}
+		Usuario usuario = _bdUsuarios.GetUsuario(nomeUsuario);
+		if (!usuario.VerificarSeLivroEstaEmprestado(nomeLivro))
+		{
+			throw new Exception("Livro nao esta nas maos do usuario");
+		}
+		_bdLivros.DevolverLivro(nomeLivro);
+		usuario.RemoverLivro(nomeLivro);
 	}
 }

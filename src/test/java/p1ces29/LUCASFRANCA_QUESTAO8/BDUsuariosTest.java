@@ -11,11 +11,12 @@ public class BDUsuariosTest {
 		BDUsuarios bd = new BDUsuarios();
 		String nome = "Lucas Franca";
 		
-		try{
+		try
+		{
 			assertFalse(bd.ExisteUsuario(nome));
-			Usuario usuario = bd.Cadastrar(nome);
+			bd.CadastrarUsuario(nome);
 			assertTrue(bd.ExisteUsuario(nome));
-			assertEquals(usuario, bd.GetUsuario(nome));
+			assertEquals(nome, bd.GetUsuario(nome).GetNome());
 			bd.RemoverUsuario(nome);
 			assertFalse(bd.ExisteUsuario(nome));
 		}
@@ -31,7 +32,8 @@ public class BDUsuariosTest {
 		BDUsuarios bd = new BDUsuarios();
 		String nome = "Lucas Franca";
 		
-		try{
+		try
+		{
 			bd.GetUsuario(nome);
 			fail("Usuario nao deveria existir");
 		}
@@ -40,7 +42,8 @@ public class BDUsuariosTest {
 			assertEquals("Usuario inexistente", e.getMessage());
 		}
 		
-		try{
+		try
+		{
 			bd.RemoverUsuario(nome);
 			fail("Usuario nao deveria existir");
 		}
@@ -49,9 +52,10 @@ public class BDUsuariosTest {
 			assertEquals("Usuario inexistente", e.getMessage());
 		}
 		
-		try{
-			bd.Cadastrar(nome);
-			bd.Cadastrar(nome);
+		try
+		{
+			bd.CadastrarUsuario(nome);
+			bd.CadastrarUsuario(nome);
 			fail("Usuario nao deveria ser inserido duas vezes");
 		}
 		catch (Exception e)
@@ -67,11 +71,12 @@ public class BDUsuariosTest {
 		String data = "22/04/2017";
 		Usuario usuario;
 
-		try{
-			bd.Cadastrar("Lucas Franca");
+		try
+		{
+			bd.CadastrarUsuario("Lucas Franca");
+			usuario = bd.GetUsuario(nome);
 			
 			bd.BloquearUsuario(nome, data);
-			usuario = bd.GetUsuario(nome);
 			assertTrue(usuario.GetBloqueado());
 			assertEquals(data, usuario.GetDataBloqueio());
 			
@@ -84,7 +89,6 @@ public class BDUsuariosTest {
 		{
 			fail(e.getMessage());
 		}
-		
 	}
 
 }
